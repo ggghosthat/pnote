@@ -3,14 +3,20 @@ from models.types import Note, Task
 from base import session
 
 class Dashboard:
-    pool = session.query(Note).order_by(Note.created.desc())
-    pool_count = len(pool)
+    notes_pool = session.query(Note).order_by(Note.created.desc())
+    tasks_pool = session.query(Task).order_by(Task.created.desc())
+
+    notes_pool_count = len(notes_pool)
+    tasks_pool_count = len(notes_pool)
     step = 10
-    position = 0
+    notes_position = 0
+    tasks_position = 0
+
+    #notes manipulation methods
 
     def get_single(self, id):
         try:
-            note = self.pool.filter(Note.nid==id).first()
+            note = self.notes_pool.filter(Note.nid==id).first()
             return note
         except Exception as ex :
             # TODO rise exception within newly implemented logger
@@ -18,10 +24,10 @@ class Dashboard:
 
     def get_notes(self):
         try:
-            if self.position > self.pool_count:
+            if self.notes_position > self.notes_pool_count:
                 return
-            notes = self.pool.limit(self.step).offset(self.position)
-            self.position = self.position + self.step
+            notes = self.notes_pool.limit(self.step).offset(self.notes_position)
+            self.notes_position = self.notes_position + self.step
             return notes
         except Exception as ex :
             # TODO rise exception within newly implemented logger
@@ -40,6 +46,14 @@ class Dashboard:
             # TODO rise exception within newly implemented logger
             pass
 
+    def remove_note(self, id):
+        try:
+            session.query(Note).filter(Note.tid==id).delete()
+            session.commit()
+        except Exception as ex :
+            # TODO rise exception within newly implemented logger
+            pass
+
     def update_note(self,
                     id,
                     new_title = None,
@@ -53,6 +67,69 @@ class Dashboard:
                 note.new_description = new_description
 
             if (new_title != None) or (new_description != None):
+                session.commit()
+        except Exception as ex :
+            # TODO rise exception within newly implemented logger
+            pass
+    
+    #tasks manipulation methods
+
+    def get_single(self, id):
+        try:
+            task = self.tasks_pool.filter(Task.tid==id).first()
+            return task
+        except Exception as ex :
+            # TODO rise exception within newly implemented logger
+            pass
+
+    def get_notes(self):
+        try:
+            if self.tasks_position > self.tasks_pool_count:
+                return
+            tasks = self.tasks_pool.limit(self.step).offset(self.tasks_position)
+            self.tasks_position = self.tasks_position + self.step
+            return tasks
+        except Exception as ex :
+            # TODO rise exception within newly implemented logger
+            pass
+
+    def add_task(self, nid, raw, timeset):
+        try:
+            task = Task(raw=raw, 
+                        created=datetime.now(),
+                        timeset=timeset,
+                        note_id=nid)
+            
+            session.add(task)
+            session.commit()
+        except Exception as ex :
+            # TODO rise exception within newly implemented logger
+            pass    
+
+    def remove_task(self, tid):
+        try:
+            session.query(Task).filter(Task.tid==tid).delete()
+            session.commit()
+        except Exception as ex :
+            # TODO rise exception within newly implemented logger
+            pass
+
+    def update_task(self, 
+                    task_id,
+                    new_raw = None, 
+                    new_note = None, 
+                    new_priority = None):
+        try:
+            task = session.query(Task).filter(Task.tid==task_id).first()
+            
+            if new_raw != None:
+                task.raw = new_raw
+            if new_note != None:
+                task.note_id = new_note
+            if new_priority != None:
+                task.priority = new_priority
+
+            if (new_raw != None) or (new_note != None) or (new_priority != None):
                 session.commit()
         except Exception as ex :
             # TODO rise exception within newly implemented logger
