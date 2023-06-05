@@ -1,6 +1,7 @@
 from datetime import datetime
 from models.types import Note, Task
-from base import session, Base, engine
+from base import session, Base, engine, logger
+import sys, os
 
 class Dashboard:
     notes_pool = session.query(Note).order_by(Note.created.desc())
@@ -21,7 +22,7 @@ class Dashboard:
             note = self.notes_pool.filter(Note.nid==id).first()
             return note
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
 
     def get_notes(self):
@@ -32,8 +33,7 @@ class Dashboard:
             self.notes_position = self.notes_position + self.step
             return notes
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
-            pass
+            self.hit_error(str(ex))
     
     def add_note(self, 
                  new_title,
@@ -46,7 +46,7 @@ class Dashboard:
             session.commit()
             return note.nid
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
 
     def remove_note(self, id):
@@ -55,7 +55,7 @@ class Dashboard:
             session.delete(note)
             session.commit()
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
 
     def update_note(self,
@@ -74,7 +74,7 @@ class Dashboard:
                 session.commit()
                 return note.nid
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
     
     #tasks manipulation methods
@@ -84,7 +84,7 @@ class Dashboard:
             task = self.tasks_pool.filter(Task.tid==id).first()
             return task
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
 
     def get_tasks(self):
@@ -95,7 +95,7 @@ class Dashboard:
             self.tasks_position = self.tasks_position + self.step
             return tasks
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
 
     def add_task(self, nid, raw, timeset):
@@ -109,7 +109,7 @@ class Dashboard:
             session.commit()
             return task.tid
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass    
 
     def remove_task(self, tid):
@@ -117,7 +117,7 @@ class Dashboard:
             session.query(Task).filter(Task.tid==tid).delete()
             session.commit()
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
 
     def update_task(self, 
@@ -139,5 +139,11 @@ class Dashboard:
                 session.commit()
                 return task.tid
         except Exception as ex :
-            # TODO rise exception within newly implemented logger
+            self.hit_error(str(ex))
             pass
+
+    def hit_error(self, msg):
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
+        metadata = f'{exc_type} {fname} {exc_tb.tb_lineno}'
+        logger.error(f'{msg} ({metadata})')
