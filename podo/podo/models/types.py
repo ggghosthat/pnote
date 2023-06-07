@@ -3,10 +3,10 @@ from sqlalchemy.orm import relationship, declarative_base
 from base import Base, session
 from datetime import datetime
 
-class Note(Base):
-    __tablename__ = "notes"
+class Plan(Base):
+    __tablename__ = "plans"
 
-    nid = Column("nid", Integer, primary_key=True, autoincrement=True, nullable=False)
+    pid = Column("pid", Integer, primary_key=True, autoincrement=True, nullable=False)
     title = Column("title", String)
     description = Column("description", String)
     created = Column("created", DateTime)
@@ -29,5 +29,5 @@ class Task(Base):
     completed = Column("completed", DateTime)
     priority = Column("priority", Integer)
 
-    note_id = Column(Integer, ForeignKey("notes.nid"), nullable=True)
-    note = relationship("Note", foreign_keys=note_id)
+    note_id = Column(Integer, ForeignKey("plans.pid"), nullable=True)
+    note = relationship("Plan", foreign_keys=note_id)

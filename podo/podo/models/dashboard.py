@@ -1,14 +1,14 @@
 from datetime import datetime
-from models.types import Note, Task
+from models.types import Plan, Task
 from base import session, Base, engine, logger
 import sys, os
 
 class Dashboard:
-    notes_pool = session.query(Note).order_by(Note.created.desc())
+    plans_pool = session.query(Plan).order_by(Plan.created.desc())
     tasks_pool = session.query(Task).order_by(Task.created.desc())
 
     step = 10
-    notes_position = 0
+    plans_position = 0
     tasks_position = 0
 
     def __init__(self):
@@ -17,62 +17,61 @@ class Dashboard:
 
     #notes manipulation methods
 
-    def get_single_note(self, id):
+    def get_single_plan(self, id):
         try:
-            note = self.notes_pool.filter(Note.nid==id).first()
-            return note
+            return self.plans_pool.filter(Plan.pid==id).first()
         except Exception as ex :
             self.hit_error(str(ex))
             pass
 
-    def get_notes(self):
+    def get_plans(self):
         try:
-            if self.notes_position > self.notes_pool.count():
+            if self.plans_position > self.plans_pool.count():
                 return
-            notes = self.notes_pool.limit(self.step).offset(self.notes_position)
-            self.notes_position = self.notes_position + self.step
-            return notes
+            plans = self.plans_pool.limit(self.step).offset(self.plans_position)
+            self.plans_position = self.plans_position + self.step
+            return plans
         except Exception as ex :
             self.hit_error(str(ex))
     
-    def add_note(self, 
+    def add_plan(self, 
                  new_title,
                  new_description):
         try:
-            note = Note(title=new_title,
+            plan = Plan(title=new_title,
                         description=new_description, 
                         created=datetime.now())
-            session.add(note)
+            session.add(plan)
             session.commit()
-            return note.nid
+            return plan.pid
         except Exception as ex :
             self.hit_error(str(ex))
             pass
 
-    def remove_note(self, id):
+    def remove_plan(self, id):
         try:
-            note = session.query(Note).filter(Note.nid==id).one()
-            session.delete(note)
+            plan = session.query(Plan).filter(Plan.pid==id).one()
+            session.delete(plan)
             session.commit()
         except Exception as ex :
             self.hit_error(str(ex))
             pass
 
-    def update_note(self,
+    def update_plan(self,
                     id,
                     new_title = None,
                     new_description = None):        
         try:
-            note = session.query(Note).filter(Note.nid==id).first()
+            plan = session.query(Plan).filter(Plan.pid==id).first()
 
             if new_title != None:
-                note.title = new_title
+                plan.title = new_title
             if new_description != None:
-                note.new_description = new_description
+                plan.new_description = new_description
 
             if (new_title != None) or (new_description != None):
                 session.commit()
-                return note.nid
+                return plan.pid
         except Exception as ex :
             self.hit_error(str(ex))
             pass
@@ -98,12 +97,12 @@ class Dashboard:
             self.hit_error(str(ex))
             pass
 
-    def add_task(self, nid, raw, timeset):
+    def add_task(self, pid, raw, timeset):
         try:
             task = Task(raw=raw, 
                         created=datetime.now(),
                         timeset=timeset,
-                        note_id=nid)
+                        note_id=pid)
             
             session.add(task)
             session.commit()
