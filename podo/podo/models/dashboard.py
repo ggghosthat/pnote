@@ -1,15 +1,18 @@
 from datetime import datetime
-from models.types import Plan, Task
+from models.planning.types import Plan, Task
+from models.linking.types import Site
 from base import session, Base, engine, logger
 import sys, os
 
 class Dashboard:
     plans_pool = session.query(Plan).order_by(Plan.created.desc())
     tasks_pool = session.query(Task).order_by(Task.created.desc())
+    sites_pool = session.query(Site).order_by(Site.created.desc())
 
     step = 10
     plans_position = 0
     tasks_position = 0
+    sites_position = 0
 
     def __init__(self):
         Base.metadata.create_all(bind=engine)
@@ -80,8 +83,7 @@ class Dashboard:
 
     def get_single_task(self, id):
         try:
-            task = self.tasks_pool.filter(Task.tid==id).first()
-            return task
+            return self.tasks_pool.filter(Task.tid==id).first()
         except Exception as ex :
             self.hit_error(str(ex))
             pass
@@ -141,8 +143,71 @@ class Dashboard:
             self.hit_error(str(ex))
             pass
 
+
+    # sites manipulation methods
+    def get_single_site(self, id):
+        try:
+            return self.tasks_pool.filter(Site.lid==id).first()
+        except Exception as ex:
+            self.hit_error(str(ex))
+            pass
+
+    def get_sites(self):
+        try:
+            if self.sites_position > self.sites_pool.count():
+                return
+            sites = self.sites_pool.limit(self.step).offset(self.sites_position)
+            self.sites_position = self.sites_position + self.step
+            return sites
+        except Exception as ex :
+            self.hit_error(str(ex))
+            pass
+
+    def add_site(self, link, header, description=None):
+        try:
+            site = Site(url=link,
+                        title=header,
+                        description=description,
+                        created=datetime.now())
+            
+            session.add(site)
+            session.commit()
+            return site.lid
+        except Exception as ex :
+            self.hit_error(str(ex))
+            pass   
+
+    def remove_site(self, lid):
+        try:
+            session.query(Task).filter(Site.lid==lid).delete()
+            session.commit()
+        except Exception as ex :
+            self.hit_error(str(ex))
+            pass
+
+    def update_task(self, 
+                    site_id,
+                    new_title = None, 
+                    new_description = None):
+        try:
+            site = session.query(Site).filter(Site.lid==site_id).first()
+            
+            if new_title != None:
+                site.title = new_title
+            if new_description != None:
+                site.description = new_description
+
+            if (new_title != None) or (new_description != None):
+                session.commit()
+                return site.lid
+        except Exception as ex :
+            self.hit_error(str(ex))
+            pass
+
+
     def hit_error(self, msg):
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         metadata = f'{exc_type} {fname} {exc_tb.tb_lineno}'
+        # print()
         logger.error(f'{msg} ({metadata})')

@@ -25,7 +25,7 @@ PONFIG = {
     'loggers': {
         'sqlalchemy.engine': {
             'handlers': ['file_handler'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False
         }
     }
