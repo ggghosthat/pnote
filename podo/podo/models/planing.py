@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Integer, CHAR, DateTime, Boolean, ForeignKey
 from sqlalchemy.orm import relationship, declarative_base
-from base import Base, session
 from datetime import datetime
+from .base import Base, session
 
 class Plan(Base):
     __tablename__ = "plans"
